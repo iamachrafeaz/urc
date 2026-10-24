@@ -24,11 +24,6 @@ export interface EmptyCallback {
     (): void;
 }
 
-export interface SessionCallback {
-    (session: Session): void;
-}
-
-
 export interface ErrorCallback {
     (error: CustomError): void;
 }

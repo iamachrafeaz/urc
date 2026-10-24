@@ -1,10 +1,13 @@
 import './App.css';
-import {Login} from "./user/Login";
+import {Outlet} from "react-router-dom";
+import {Box} from "@chakra-ui/react";
 
 function App() {
 
   return (
-      <Login/>
+      <Box width={"100%"} height={"100vh"}>
+        <Outlet/>
+      </Box>
   );
 }
 

@@ -78,7 +78,7 @@ Le squelette d'application fourni contient déjà un formulaire de connexion bas
 
 Le service `/api/login` permet de récupérer un token de session qu'on stocke en session storage,
 afin qu'il soit persisté lors d'un refresh du site. <br/>
-Il est présent [ici](api/login.js).<br/>
+Il est présent [ici](api/auth/login.js).<br/>
 Avant de passer à la suite, lire la note sur la [gestion du mot de passe](#mdp)
 
 <a id="session"></a>

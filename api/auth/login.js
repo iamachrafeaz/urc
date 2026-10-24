@@ -1,6 +1,6 @@
 import { db } from '@vercel/postgres';
 import { Redis } from '@upstash/redis';
-import {arrayBufferToBase64, stringToArrayBuffer} from "../lib/base64";
+import {arrayBufferToBase64, stringToArrayBuffer} from "../../lib/base64";
 
 export const config = {
     runtime: 'edge',
@@ -16,6 +16,7 @@ export default async function handler(request) {
 
         const client = await db.connect();
         const {rowCount, rows} = await client.sql`select * from users where username = ${username} and password = ${hashed64}`;
+
         if (rowCount !== 1) {
             const error = {code: "UNAUTHORIZED", message: "Identifiant ou mot de passe incorrect"};
             return new Response(JSON.stringify(error), {
@@ -31,7 +32,12 @@ export default async function handler(request) {
             userInfo[user.id] = user;
             await redis.hset("users", userInfo);
 
-            return new Response(JSON.stringify({token: token, username: username, externalId: rows[0].external_id, id: rows[0].user_id}), {
+            return new Response(JSON.stringify({
+                token: token,
+                username: username,
+                externalId: rows[0].external_id,
+                id: rows[0].user_id
+            }), {
                 status: 200,
                 headers: {'content-type': 'application/json'},
             });
