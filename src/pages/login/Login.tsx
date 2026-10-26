@@ -4,9 +4,12 @@ import {CustomError} from "../../model/CustomError.ts";
 import {AbsoluteCenter, Box, Button, Container, Flex, Heading, Input, VStack, Text, IconButton, Spinner} from "@chakra-ui/react";
 import {useNavigate} from "react-router-dom";
 import {Check} from "lucide-react";
+import type {Session} from "../../model/common.ts";
+import {useSessionStore} from "../../stores/session.ts";
 
 export function Login() {
     const navigate = useNavigate();
+    const setSession = useSessionStore(state => state.setSession)
 
     const [error, setError] = useState<CustomError>({});
     const [isLoading, setIsLoading] = useState(false);
@@ -18,9 +21,11 @@ export function Login() {
         const data = new FormData(form);
         setIsLoading(true);
         loginUser({user_id: -1, username:  data.get('login') as string, password: data.get('password') as string},
-            () => {
+            (session: Session) => {
                 setIsLoading(false);
                 setIsSuccess(true);
+                setSession(session)
+                navigate("/messages")
                 setError(new CustomError(""));
             }, (loginError: CustomError) => {
                 setError(loginError);
@@ -49,7 +54,7 @@ export function Login() {
                                 {(!isLoading && !isSuccess) && <Button type="submit" width={"100%"} disabled={isLoading}>Connexion</Button>}
                                 {isLoading && <IconButton width={"100%"}><Spinner/></IconButton>}
                                 {isSuccess && <IconButton width={"100%"}><Check /></IconButton>}
-                                <Button type="button" variant={"outline"} width={"100%"} disabled={isLoading} onClick={()=>handleRedirect()}>Créer un compte</Button>
+                                <Button type="button" variant={"outline"} width={"100%"} disabled={isLoading} onClick={()=> handleRedirect()}>Créer un compte</Button>
                             </VStack>
                         </Container>
                     </form>

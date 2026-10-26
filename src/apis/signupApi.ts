@@ -1,7 +1,7 @@
-import type {ErrorCallback, Session, User} from "../model/common.ts";
+import type {EmptyCallback, ErrorCallback, Session, User} from "../model/common.ts";
 import {CustomError} from "../model/CustomError.ts";
 
-export function signupUser(user: User, onResult: () => void, onError: ErrorCallback){
+export function signupUser(user: User, onResult: EmptyCallback, onError: ErrorCallback){
     fetch("/api/auth/signup",{
         method: "POST",
         headers: {
@@ -12,6 +12,7 @@ export function signupUser(user: User, onResult: () => void, onError: ErrorCallb
         if(response.ok){
             const session = await response.json() as Session;
             sessionStorage.setItem('token', session.token);
+            sessionStorage.setItem('id', session.id?.toString() || "");
             sessionStorage.setItem('externalId', session.externalId);
             sessionStorage.setItem('username', session.username || "");
             onResult()

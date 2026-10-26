@@ -143,7 +143,7 @@ Déroulé du service login :
 
 ### ✏️ Liste des utilisateurs
 
-Le service [users.js](api/users.js) permet de vérifier que l'utilisateur est bien connecté et de récupérer la liste des utilisateurs existants (avec seulement leurs données publiques).
+Le service [all.js](api/users/all.js) permet de vérifier que l'utilisateur est bien connecté et de récupérer la liste des utilisateurs existants (avec seulement leurs données publiques).
 
  - Utiliser ce service pour récupérer la liste des utilisateurs et l'enregistrer dans le store
  - Si vous obtenez une erreur 401 "UNAUTHORIZED", c'est que vous avez oublié de [mettre le token de session en header](#session).

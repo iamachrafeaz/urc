@@ -1,27 +1,36 @@
-// stores/session.ts
+
 import { create } from "zustand";
+import type { Session } from "../model/common.ts";
+import getStoredSession from "../utils/getStoredSession.ts";
 
 type SessionStore = {
-    token: string | null;
-    setToken: (token: string | null) => void;
+    session: Session | null;
+    setSession: (session: Session) => void;
     logout: () => void;
 };
 
 export const useSessionStore = create<SessionStore>((set) => ({
-    token: sessionStorage.getItem("token"),
+    session: getStoredSession(),
 
-    setToken: (token) => {
-        if (token) {
-            sessionStorage.setItem("token", token);
-        } else {
-            sessionStorage.removeItem("token");
-        }
+    setSession: (session) => {
+        sessionStorage.setItem("token", session.token);
+        sessionStorage.setItem("username", session.username ?? "");
+        sessionStorage.setItem("externalId", session.externalId);
+        sessionStorage.setItem("id", String(session.id ?? ""));
 
-        set({ token });
+        set({
+            session,
+        });
     },
 
     logout: () => {
         sessionStorage.removeItem("token");
-        set({ token: null });
+        sessionStorage.removeItem("username");
+        sessionStorage.removeItem("id");
+        sessionStorage.removeItem("externalId");
+
+        set({
+            session: null,
+        });
     },
 }));

@@ -37,6 +37,7 @@ function Signup(){
                 setIsLoading(false);
                 setIsSuccess(true);
                 setError(new CustomError(""));
+                navigate("/messages")
             },
             (error: CustomError) => {
                 console.error(error);
