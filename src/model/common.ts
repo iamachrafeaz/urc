@@ -19,6 +19,11 @@ export interface Session {
     externalId: string;
 }
 
+export interface Message {
+    senderId: number,
+    content: string,
+    timestamp: string
+}
 
 export interface EmptyCallback {
     (): void;

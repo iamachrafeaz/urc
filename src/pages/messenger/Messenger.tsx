@@ -1,13 +1,12 @@
 import {React, useEffect} from "react";
 import NavBar from "../../components/common/NavBar.tsx";
-import {Box, Flex} from "@chakra-ui/react";
+import {Flex} from "@chakra-ui/react";
 import ConversationList from "../../components/ConversationList.tsx";
-import MessageList from "../../components/MessageList.tsx";
 import {useSessionStore} from "../../stores/session.ts";
-import {useUsersStore} from "../../stores/users.tsx";
+import {useUsersStore} from "../../stores/users.ts";
 import {getUsersList} from "../../apis/usersApi.ts";
 import {useLogout} from "../../hooks/useLogout.ts";
-import {toaster} from "../../components/ui/toaster.tsx";
+import Conversation from "../../components/Conversation.tsx";
 
 function Messenger(){
     const session = useSessionStore(state=> state.session);
@@ -36,21 +35,40 @@ function Messenger(){
         }
     }, []);
 
-    return <Box h="100vh" w="100%" overflow="hidden">
-        <NavBar/>
-        <Flex h="100%" w="100%" overflow="hidden" px={"10px"} py={"15px"} gap={2}>
+    return (
+        <Flex direction="column" h="100dvh" w="100%" overflow="hidden">
+            <NavBar />
+
             <Flex
-                direction="column"
-                w="350px"
-                minW="280px"
+                flex="1"
+                minH="0"
+                w="100%"
+                overflow="hidden"
+                px="10px"
+                py="15px"
+                gap={2}
             >
-                <ConversationList/>
-            </Flex>
-            <Flex flex={"1"}>
-                <MessageList/>
+                <Flex
+                    direction="column"
+                    w="350px"
+                    minW="280px"
+                    minH="0"
+                    overflow="hidden"
+                >
+                    <ConversationList />
+                </Flex>
+
+                <Flex
+                    flex="1"
+                    minW="0"
+                    minH="0"
+                    overflow="hidden"
+                >
+                    <Conversation />
+                </Flex>
             </Flex>
         </Flex>
-    </Box>
+    );
 }
 
 export default Messenger;

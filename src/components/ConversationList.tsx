@@ -1,6 +1,6 @@
 import React from "react";
 import {Box, Flex, Heading, List, Spinner} from "@chakra-ui/react";
-import {useUsersStore} from "../stores/users.tsx";
+import {useUsersStore} from "../stores/users.ts";
 import {UserItem} from "./UserComponent.tsx";
 import type {User} from "../model/common.ts";
 import {useNavigate} from "react-router-dom";

@@ -13,9 +13,10 @@ export default async function handler(request) {
             console.log("Not connected");
             return unauthorizedResponse();
         }
-
         const {rowCount, rows} = await sql`select user_id, username, TO_CHAR(last_login, 'DD/MM/YYYY HH24:MI') as last_login from users order by last_login desc`;
+
         console.log("Got " + rowCount + " users");
+
         if (rowCount === 0) {
             return new Response("[]", {
                 status: 200,
