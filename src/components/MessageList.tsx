@@ -19,6 +19,12 @@ function MessageList(){
     const isLoadingMessages = useConversationStore(state=> state.isLoading);
     const setIsLoadingMessages = useConversationStore(state=> state.setLoading);
 
+    const bottomRef = useRef<HTMLDivElement>(null);
+
+    useEffect(() => {
+        bottomRef.current?.scrollIntoView({behavior: "smooth"});
+    }, [messages, isLoadingMessages]);
+
     useEffect(() => {
         if (!userId || !session) {
             setMessages([]);
@@ -40,6 +46,48 @@ function MessageList(){
                 setIsLoadingMessages(false);
             }
         );
+    }, [userId, session]);
+
+    const refreshMessages = () => {
+        console.log("Received message","jfpoejfope");
+        if (!userId || !session) return;
+        console.log("Received message","jfpoejfope");
+
+        getConversation(
+            Number(userId),
+            session,
+            (messages: Message[]) => {
+                setMessages(messages);
+            },
+            (error) => {
+                console.error(error);
+            }
+        );
+    };
+
+    useEffect(() => {
+        const handleMessage = (event: MessageEvent) => {
+            console.log("Service worker message received:", event.data);
+
+            const data = event.data;
+
+            if (data?.type !== "NEW_MESSAGE") return;
+
+            console.log("NEW_MESSAGE event detected");
+            console.log("senderId:", data.senderId);
+            console.log("userId:", userId);
+
+            if (Number(data.senderId) !== Number(userId)) return;
+
+            console.log("Refreshing conversation...");
+            refreshMessages();
+        };
+
+        navigator.serviceWorker.addEventListener("message", handleMessage);
+
+        return () => {
+            navigator.serviceWorker.removeEventListener("message", handleMessage);
+        };
     }, [userId, session]);
 
     if(!userId) {
@@ -89,6 +137,7 @@ function MessageList(){
         {messages.map((message: Message) =>
             <MessageBubble message={message.content} isUser={message.senderId == session!.id}/>)
         }
+        <div ref={bottomRef} />
     </Flex>
 }
 

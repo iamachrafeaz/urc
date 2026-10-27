@@ -1,7 +1,7 @@
 import {checkSession, unauthorizedResponse} from "../../lib/session.js";
 import {sql} from "@vercel/postgres";
 import { Redis } from '@upstash/redis';
-// const PushNotifications = require("@pusher/push-notifications-server");
+import PushNotifications from "@pusher/push-notifications-server";
 
 const redis = Redis.fromEnv();
 
@@ -43,7 +43,7 @@ export default async (request, response) => {
             });
         }
 
-        const { rowCount } = await sql`SELECT username FROM users WHERE user_id = ${payload.receiverId}`;
+        const { rowCount, rows } = await sql`SELECT username, external_id FROM users WHERE user_id = ${payload.receiverId}`;
 
         if (rowCount === 0) {
             return response.status(400).json({
@@ -67,6 +67,24 @@ export default async (request, response) => {
 
         await redis.lpush(convKey, JSON.stringify(message));
         await redis.expire(convKey, 86400);
+
+        const beamsClient = new PushNotifications({
+            instanceId: process.env.PUSHER_INSTANCE_ID,
+            secretKey: process.env.PUSHER_SECRET_KEY,
+        });
+
+        await beamsClient.publishToUsers([rows[0].external_id], {
+            web: {
+                notification: {
+                    title: `@${user.username}`,
+                    body: "Sent you a message",
+                },
+                data: {
+                    type: "NEW_MESSAGE",
+                    senderId: user.id
+                }
+            },
+        });
 
         return response.status(200).json({
             message: "Message sent successfully",

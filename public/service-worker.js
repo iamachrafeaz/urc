@@ -1,25 +1,28 @@
-// proper initialization
-if( 'function' === typeof importScripts) {
-  /* eslint-disable no-undef */
-  importScripts("https://js.pusher.com/beams/service-worker.js");
+if (typeof importScripts === "function") {
+  importScripts("https://js.pusher.com/beams/service-worker.js")
 }
 
 PusherPushNotifications.onNotificationReceived = ({
-  pushEvent,
-  payload,
-  handleNotification,
-}) => {
+                                                    pushEvent,
+                                                    payload,
+                                                    handleNotification,
+                                                  }) => {
+  console.log("Worker got:", payload)
 
-  console.log("worker got : " + JSON.stringify(payload));
+  pushEvent.waitUntil(
+      Promise.resolve()
+          .then(() => handleNotification(payload))
+          .then(() => {
+            console.log("Notification handled successfully")
+          })
+          .catch((error) => {
+            console.error("Notification handling failed:", error)
+          }),
+  )
 
-  // Get the client.
-  self.clients.matchAll().then((matchedClient) => matchedClient.forEach(client => {
-    client.postMessage(payload.data);
-  }));
-
-  // Your custom notification handling logic here 🛠️
-  // This method triggers the default notification handling logic offered by
-  // the Beams SDK. This gives you an opportunity to modify the payload.
-  // E.g. payload.notification.title = "A client-determined title!"
-  pushEvent.waitUntil(handleNotification(payload));
-};
+  self.clients.matchAll().then((clients) => {
+    clients.forEach((client) => {
+      client.postMessage(payload.data)
+    })
+  })
+}

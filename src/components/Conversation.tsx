@@ -5,7 +5,6 @@ import MessageInput from "./MessageInput.tsx";
 
 function Conversation() {
 
-
     return <Flex
         flex={"1"}
         bgColor={"gray.50"}

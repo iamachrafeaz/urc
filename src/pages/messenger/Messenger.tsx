@@ -1,39 +1,47 @@
 import {React, useEffect} from "react";
-import NavBar from "../../components/common/NavBar.tsx";
-import {Flex} from "@chakra-ui/react";
-import ConversationList from "../../components/ConversationList.tsx";
-import {useSessionStore} from "../../stores/session.ts";
-import {useUsersStore} from "../../stores/users.ts";
-import {getUsersList} from "../../apis/usersApi.ts";
-import {useLogout} from "../../hooks/useLogout.ts";
-import Conversation from "../../components/Conversation.tsx";
+import { Flex } from "@chakra-ui/react";
 
-function Messenger(){
-    const session = useSessionStore(state=> state.session);
-    const setUsers = useUsersStore(state => state.setUsers);
-    const setIsLoadingUsers = useUsersStore(state => state.setIsLoading);
+import NavBar from "../../components/common/NavBar";
+import ConversationList from "../../components/ConversationList";
+import Conversation from "../../components/Conversation";
+import { useSessionStore } from "../../stores/session";
+import { useUsersStore } from "../../stores/users";
+import { getUsersList } from "../../apis/usersApi";
+import { useLogout } from "../../hooks/useLogout";
+import { useBeams } from "../../hooks/useBeams";
+
+function Messenger() {
+    const session = useSessionStore((state) => state.session);
+
+    useBeams(session);
+
+    const setUsers = useUsersStore((state) => state.setUsers);
+    const setIsLoadingUsers = useUsersStore((state) => state.setIsLoading);
     const logout = useLogout();
 
     useEffect(() => {
-        setIsLoadingUsers(true)
-        if(session){
-            getUsersList(
-                session,
-                (users) => {
-                    setUsers(users);
-                    setIsLoadingUsers(false);
-                },
-                (error) => {
-                    if(error.code == "SESSION_EXPIRED"){
-                        logout();
-                    }else{
-                        console.error(error)
-                    }
+        if (!session) return;
 
-                    setIsLoadingUsers(false);
-                })
-        }
-    }, []);
+        setIsLoadingUsers(true);
+
+        getUsersList(
+            session,
+            (users) => {
+                setUsers(users);
+                setIsLoadingUsers(false);
+            },
+            (error) => {
+                if (error.code === "SESSION_EXPIRED") {
+                    logout();
+                } else {
+                    console.error(error);
+                }
+
+                setIsLoadingUsers(false);
+            },
+        );
+    }, [session, setUsers, setIsLoadingUsers, logout]);
+
 
     return (
         <Flex direction="column" h="100dvh" w="100%" overflow="hidden">
@@ -58,12 +66,7 @@ function Messenger(){
                     <ConversationList />
                 </Flex>
 
-                <Flex
-                    flex="1"
-                    minW="0"
-                    minH="0"
-                    overflow="hidden"
-                >
+                <Flex flex="1" minW="0" minH="0" overflow="hidden">
                     <Conversation />
                 </Flex>
             </Flex>
