@@ -3,6 +3,10 @@ import {sql} from "@vercel/postgres";
 import { Redis } from '@upstash/redis';
 import PushNotifications from "@pusher/push-notifications-server";
 
+export const config = {
+    runtime: 'edge',
+};
+
 const redis = Redis.fromEnv();
 
 export default async (request, response) => {
