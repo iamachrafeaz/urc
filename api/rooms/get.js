@@ -2,51 +2,70 @@ import {Redis} from "@upstash/redis";
 import {checkSession, unauthorizedResponse} from "../../lib/session.js";
 import {sql} from "@vercel/postgres";
 
+export const config = {
+    runtime: 'edge',
+};
+
 const redis = Redis.fromEnv();
 
-export default async (request, response) =>{
-    if(request.method !== "GET"){
-        response.setHeader("Allow", ["GET"]);
-        return response.status(405).json({
+export default async function handler(request) {
+    if (request.method !== "GET") {
+        return new Response(JSON.stringify({
             code: "METHOD_NOT_ALLOWED",
-            message: "Only POST requests are allowed",
-        })
+            message: "Only GET requests are allowed",
+        }), {
+            status: 405,
+            headers: { 'content-type': 'application/json', 'Allow': 'GET' },
+        });
     }
 
     try {
         const user = await checkSession(request);
-        if(user === undefined || user === null){
+        if (!user) {
             console.log("Not connected");
-            return unauthorizedResponse(response);
+            return unauthorizedResponse();
         }
 
-        const payload = request.query;
+        const { searchParams } = new URL(request.url);
+        const roomId = searchParams.get("roomId");
 
-        if(payload.roomId === undefined || payload.roomId === null){
-            return response.status(500).json({
+        if (!roomId) {
+            return new Response(JSON.stringify({
                 code: "EMPTY_BODY",
-                message: "Empty body"
-            })
-        }
-
-        const {rowCount} = sql`SELECT * FROM rooms WHERE room_id = ${payload.roomId}`;
-
-        if (rowCount === 0) {
-            return response.status(400).json({
-                code: "RECEIVER_NOT_FOUND",
-                message: "Receiver not found",
+                message: "Missing roomId parameter",
+            }), {
+                status: 400,
+                headers: { 'content-type': 'application/json' },
             });
         }
 
-        const roomKey = `room:${payload.roomId}`;
-        const conversation = await redis.lrange(roomKey, 0, -1);
-        return response.status(200).json(conversation);
+        const { rowCount } = await sql`SELECT * FROM rooms WHERE room_id = ${roomId}`;
 
-    }catch (e) {
+        if (rowCount === 0) {
+            return new Response(JSON.stringify({
+                code: "ROOM_NOT_FOUND",
+                message: "Room not found",
+            }), {
+                status: 404,
+                headers: { 'content-type': 'application/json' },
+            });
+        }
+
+        const roomKey = `room:${roomId}`;
+        const conversation = await redis.lrange(roomKey, 0, -1);
+        return new Response(JSON.stringify(conversation), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+        });
+
+    } catch (e) {
         console.error(e);
-        return response.status(500).json({
+        return new Response(JSON.stringify({
             code: "SERVER_ERROR",
-            message: "Server error has occurred"
+            message: "Server error has occurred",
+        }), {
+            status: 500,
+            headers: { 'content-type': 'application/json' },
         });
     }
 }

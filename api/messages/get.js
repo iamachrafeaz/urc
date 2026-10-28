@@ -2,55 +2,72 @@ import {Redis} from "@upstash/redis";
 import {checkSession, unauthorizedResponse} from "../../lib/session.js";
 import {sql} from "@vercel/postgres";
 
+export const config = {
+    runtime: 'edge',
+};
+
 const redis = Redis.fromEnv();
 
-export default async (request, response) =>{
-    if(request.method !== "GET"){
-        response.setHeader("Allow", ["GET"]);
-        return response.status(405).json({
+export default async function handler(request) {
+    if (request.method !== "GET") {
+        return new Response(JSON.stringify({
             code: "METHOD_NOT_ALLOWED",
-            message: "Only POST requests are allowed",
-        })
+            message: "Only GET requests are allowed",
+        }), {
+            status: 405,
+            headers: { 'content-type': 'application/json', 'Allow': 'GET' },
+        });
     }
 
     try {
         const user = await checkSession(request);
-        if(user === undefined || user === null){
+        if (!user) {
             console.log("Not connected");
-            return unauthorizedResponse(response);
+            return unauthorizedResponse();
         }
 
-        const payload = request.query;
+        const { searchParams } = new URL(request.url);
+        const contactId = searchParams.get("contactId");
 
-        if(payload.contactId === undefined || payload.contactId === null){
-            return response.status(500).json({
+        if (!contactId) {
+            return new Response(JSON.stringify({
                 code: "EMPTY_BODY",
-                message: "Empty body"
-            })
-        }
-
-        const {rowCount} = sql`SELECT username FROM users WHERE user_id = ${payload.contactId}`;
-
-        if (rowCount === 0) {
-            return response.status(400).json({
-                code: "RECEIVER_NOT_FOUND",
-                message: "Receiver not found",
+                message: "Missing contactId parameter",
+            }), {
+                status: 400,
+                headers: { 'content-type': 'application/json' },
             });
         }
 
-        const [min, max] = [String(user.id), String(payload.contactId)].sort();
+        const { rowCount } = await sql`SELECT username FROM users WHERE user_id = ${contactId}`;
 
+        if (rowCount === 0) {
+            return new Response(JSON.stringify({
+                code: "RECEIVER_NOT_FOUND",
+                message: "Receiver not found",
+            }), {
+                status: 404,
+                headers: { 'content-type': 'application/json' },
+            });
+        }
+
+        const [min, max] = [String(user.id), String(contactId)].sort();
         const convKey = `conv:${min}:${max}`;
-
         const conversation = await redis.lrange(convKey, 0, -1);
 
-        return response.status(200).json(conversation);
+        return new Response(JSON.stringify(conversation), {
+            status: 200,
+            headers: { 'content-type': 'application/json' },
+        });
 
-    }catch (e) {
+    } catch (e) {
         console.error(e);
-        return response.status(500).json({
+        return new Response(JSON.stringify({
             code: "SERVER_ERROR",
-            message: "Server error has occurred"
+            message: "Server error has occurred",
+        }), {
+            status: 500,
+            headers: { 'content-type': 'application/json' },
         });
     }
 }
