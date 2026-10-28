@@ -12,6 +12,13 @@ export interface User {
     external_id?: string;
 }
 
+export interface Room {
+    room_id: number,
+    name: string,
+    created_on: string,
+    created_by: string
+}
+
 export interface Session {
     token: string;
     username?: string;
@@ -21,6 +28,7 @@ export interface Session {
 
 export interface Message {
     senderId: number,
+    senderUsername?: string,
     content: string,
     timestamp: string
 }

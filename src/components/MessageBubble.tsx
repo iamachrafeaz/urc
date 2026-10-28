@@ -1,13 +1,13 @@
 import React from "react";
-import {Box, Text} from "@chakra-ui/react";
+import { Box, Text, VStack } from "@chakra-ui/react";
+import type { Message } from "../model/common.ts";
 
-const MessageBubble = ({
-                           message,
-                           isUser,
-                       }: {
-    message: string;
+type MessageBubbleProps = {
+    message: Message;
     isUser: boolean;
-}) => {
+};
+
+const MessageBubble = ({ message, isUser }: MessageBubbleProps) => {
     return (
         <Box
             rounded="md"
@@ -19,7 +19,14 @@ const MessageBubble = ({
             w="fit-content"
             maxW="75%"
         >
-            <Text>{message}</Text>
+            <VStack>
+                {message.senderUsername && (
+                    <Text fontSize="sm" fontStyle="italic">
+                        @{message.senderUsername}
+                    </Text>
+                )}
+                <Text>{message.content}</Text>
+            </VStack>
         </Box>
     );
 };

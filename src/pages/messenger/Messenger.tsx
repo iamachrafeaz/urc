@@ -1,47 +1,16 @@
-import {React, useEffect} from "react";
+import {React} from "react";
 import { Flex } from "@chakra-ui/react";
 
 import NavBar from "../../components/common/NavBar";
-import ConversationList from "../../components/ConversationList";
-import Conversation from "../../components/Conversation";
+import ConversationsList from "../../components/ConversationsList.tsx";
 import { useSessionStore } from "../../stores/session";
-import { useUsersStore } from "../../stores/users";
-import { getUsersList } from "../../apis/usersApi";
-import { useLogout } from "../../hooks/useLogout";
 import { useBeams } from "../../hooks/useBeams";
+import {Outlet} from "react-router-dom";
 
 function Messenger() {
     const session = useSessionStore((state) => state.session);
 
     useBeams(session);
-
-    const setUsers = useUsersStore((state) => state.setUsers);
-    const setIsLoadingUsers = useUsersStore((state) => state.setIsLoading);
-    const logout = useLogout();
-
-    useEffect(() => {
-        if (!session) return;
-
-        setIsLoadingUsers(true);
-
-        getUsersList(
-            session,
-            (users) => {
-                setUsers(users);
-                setIsLoadingUsers(false);
-            },
-            (error) => {
-                if (error.code === "SESSION_EXPIRED") {
-                    logout();
-                } else {
-                    console.error(error);
-                }
-
-                setIsLoadingUsers(false);
-            },
-        );
-    }, [session, setUsers, setIsLoadingUsers, logout]);
-
 
     return (
         <Flex direction="column" h="100dvh" w="100%" overflow="hidden">
@@ -63,11 +32,11 @@ function Messenger() {
                     minH="0"
                     overflow="hidden"
                 >
-                    <ConversationList />
+                    <ConversationsList />
                 </Flex>
 
                 <Flex flex="1" minW="0" minH="0" overflow="hidden">
-                    <Conversation />
+                    <Outlet />
                 </Flex>
             </Flex>
         </Flex>

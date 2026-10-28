@@ -10,7 +10,7 @@ type UserItemProps = {
 
 export function UserItem({ user, onClick }: UserItemProps) {
     return (
-        <Flex gap={2} my="5px" align="center" px={"5px"} py={"10px"} rounded={"sm"} _hover={{ bg: "gray.100" }} onClick={onClick}>
+        <Flex gap={2} my="5px" align="center" px={"5px"} py={"10px"} rounded={"sm"} _hover={{ bg: "gray.300" }} onClick={onClick}>
             <Avatar.Root>
                 <Avatar.Fallback name={user.username} />
                 <Float placement="bottom-end" offsetX="1.5" offsetY="1">

@@ -1,49 +1,100 @@
-import React, {useState} from "react";
-import {Button, Flex, Input, Spinner} from "@chakra-ui/react";
-import {sendMessage} from "../apis/conversationApi.ts";
-import {useParams} from "react-router-dom";
-import {useSessionStore} from "../stores/session.ts";
-import {useConversationStore} from "../stores/conversation.ts";
+import React, { useState } from "react";
+import { Button, Flex, Input, Spinner } from "@chakra-ui/react";
+import { useParams } from "react-router-dom";
 
-function MessageInput(){
-    const params = useParams();
+import { sendMessage } from "../apis/conversationApi.ts";
+
+import { useSessionStore } from "../stores/session.ts";
+import { useConversationStore } from "../stores/conversation.ts";
+import {sendRoomMessage} from "../apis/roomConversationApi.ts";
+
+function MessageInput() {
+    const { userId: userId, roomId: roomId } = useParams();
+
     const session = useSessionStore(state => state.session);
+    const addMessage = useConversationStore(state => state.addMessage);
 
     const [messageInput, setMessageInput] = useState("");
     const [isSending, setIsSending] = useState(false);
 
-    const addMessage = useConversationStore(state=> state.addMessage);
+    const isRoomConversation = Boolean(roomId);
+    const conversationId = roomId ?? userId;
 
-    const handleSend = () => {
-        setIsSending(true);
-        const payload= {
-            message: messageInput,
-            receiverId: Number(params.userId)
+    const handleSend = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        const content = messageInput.trim();
+
+        if (!content || !conversationId || !session || isSending) {
+            return;
         }
-        sendMessage(payload, session!, () => {
-            setMessageInput("");
-            addMessage({content: messageInput, senderId: session!.id!, timestamp: new Date().toISOString()});
-            setIsSending(false);
-        }, (err) => {
-            console.error(err);
-            setIsSending(false);
-        })
-    }
 
-    return <form action={handleSend}>
-        <Flex gap={2}>
-            <Input
-                disable={isSending}
-                placeholder="Type something..."
-                value={messageInput}
-                onChange={(e) => {
-                    if(!isSending) {
-                        setMessageInput(e.target.value)
+        setIsSending(true);
+
+        const onSuccess = () => {
+            addMessage({
+                content,
+                senderId: session.id!,
+                senderUsername: session.username,
+                timestamp: new Date().toISOString()
+            });
+
+            setMessageInput("");
+            setIsSending(false);
+        };
+
+        const onError = (error: unknown) => {
+            console.error("Failed to send message:", error);
+            setIsSending(false);
+        };
+
+        if (isRoomConversation) {
+            sendRoomMessage(
+                {
+                    content,
+                    roomId: Number(roomId)
+                },
+                session,
+                onSuccess,
+                onError
+            );
+        } else {
+            sendMessage(
+                {
+                    message: content,
+                    receiverId: Number(userId)
+                },
+                session,
+                onSuccess,
+                onError
+            );
+        }
+    };
+
+    return (
+        <form onSubmit={handleSend}>
+            <Flex gap={2}>
+                <Input
+                    disabled={isSending || (!userId && !roomId) || !session}
+                    placeholder="Type something..."
+                    value={messageInput}
+                    onChange={event => setMessageInput(event.target.value)}
+                />
+
+                <Button
+                    type="submit"
+                    disabled={
+                        isSending ||
+                        !messageInput.trim() ||
+                        (!userId && !roomId) ||
+                        !session
                     }
-                }}/>
-        <Button type={"submit"}>{isSending ? <Spinner/> : "Send"}</Button>
-        </Flex>
-    </form>
+                >
+                    {isSending ? <Spinner size="sm" /> : "Send"}
+                </Button>
+            </Flex>
+        </form>
+    );
 }
 
 export default MessageInput;
