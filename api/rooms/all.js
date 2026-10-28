@@ -1,17 +1,13 @@
 import {checkSession, serverError, unauthorizedResponse} from "../../lib/session.js";
 import {sql} from "@vercel/postgres";
 
-export const config = {
-    runtime: 'edge',
-};
-
 export default async function handler(request, response){
     try{
         const connected = await checkSession(request);
 
         if(!connected){
             console.log("Not connect")
-            return unauthorizedResponse();
+            return unauthorizedResponse(response);
         }
 
         const {rows} = await sql`SELECT * FROM rooms`;

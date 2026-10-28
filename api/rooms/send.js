@@ -3,17 +3,13 @@ import {Redis} from "@upstash/redis";
 import {sql} from "@vercel/postgres";
 import PushNotifications from "@pusher/push-notifications-server";
 
-export const config = {
-    runtime: 'edge',
-};
-
 const redis = Redis.fromEnv(process.env.REDIS_URL);
 
 export default async function handler(request, response){
     try{
         const connected = await checkSession(request);
         if(!connected){
-            return unauthorizedResponse();
+            return unauthorizedResponse(response);
         }
 
         const payload = request.body;
@@ -80,6 +76,6 @@ export default async function handler(request, response){
         });
     }catch(e){
         console.error(e);
-        return serverError();
+        return serverError(response);
     }
 }

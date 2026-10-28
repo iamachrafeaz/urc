@@ -2,10 +2,6 @@ import {Redis} from "@upstash/redis";
 import {checkSession, unauthorizedResponse} from "../../lib/session.js";
 import {sql} from "@vercel/postgres";
 
-export const config = {
-    runtime: 'edge',
-};
-
 const redis = Redis.fromEnv();
 
 export default async (request, response) =>{
